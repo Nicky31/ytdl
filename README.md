@@ -26,35 +26,35 @@ With every possible tags :
 ytdl http://youtube.com/some_video artist="My artist" song="My song" comment="some comment" genre="first genre" genre+="new genre" ...
 ```
 
-## Session mode
+### Session mode
 
 With no default tags: 
 ```
-> ytdl session [OPTIONAL_OUTPUT_DIR]
-> http://youtube.com/first_video_without_tags
-> http://youtube.com/2nd_with_some_tags genre="Rock;Indie" comment="u flyin"
+# ytdl session [OPTIONAL_OUTPUT_DIR]
+# http://youtube.com/first_video_without_tags
+# http://youtube.com/2nd_with_some_tags genre="Rock;Indie" comment="u flyin"
 ```
 When output dir is not specified, defaults to `$SAVE_DIRECTORY` (or its default value).
 
 With default tags :
 ```
-> ytdl session genre="Rock" comment="they are all great"
-> http://youtube.com/first_video genre+="Indie"
+# ytdl session genre="Rock" comment="they are all great"
+# http://youtube.com/first_video genre+="Indie"
 ```
 
-## Tags edition
+### Tags edition
 
 ```
-> ytdl tags [OPTIONAL_MP3_GLOBBING]
+# ytdl tags [OPTIONAL_MP3_GLOBBING]
 < /my/save/directory/Rap
 < 1) Jehst - Liquid diction.mp3          Artist='Jehst'          Track='Liquid diction'  Genres='Rap'    Comment=''
 < 2) Lighter Shade - Shaolin Angel.mp3   Artist='Lighter Shade'  Track='Shaolin Angel'   Genres='Rap'    Comment=''
 < Select music index ranges to edit, 'p' to print ID3 tags or 'e' to exit :
-> 1-2
+# 1-2
 < Selected "/my/save/directory/Rap/Jehst - Liquid diction.mp3" "/my/save/directory/Rap/Lighter Shade - Shaolin Angel.mp3"
-> genre+="Oldschool"
+# genre+="Oldschool"
 < Select music index ranges to edit, 'p' to print ID3 tags or 'e' to exit :
-> p
+# p
 < 1) Jehst - Liquid diction.mp3          Artist='Jehst'          Track='Liquid diction'  Genres='Rap;Oldschool'    Comment=''
 < 2) Lighter Shade - Shaolin Angel.mp3   Artist='Lighter Shade'  Track='Shaolin Angel'   Genres='Rap;Oldschool'    Comment=''
 ```
