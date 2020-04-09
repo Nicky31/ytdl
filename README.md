@@ -19,44 +19,60 @@ On top of them, a few improvements have been done to enhance tags consistency & 
 
 ### Single download mode
 
-```ytdl http://youtube.com/some_video```
+Without any tag, from an officiel youtube channel : 
+```
+#> ytdl http://youtube.com/some_video
+Downloading http://youtube.com/some_video ...
+Downloaded 'MyTrack.mp3'.
+Official youtube channel not specifying artist, so renamed file into 'OfficialName - MyTrack.mp3'
+Leaving downloaded track default's artist=OfficialName && track=MyTrack
+Moved mp3 to '/my/save/directory/OfficialName - MyTrack.mp3'
+```
+
 
 With every possible tags : 
 ```
-ytdl http://youtube.com/some_video artist="My artist" song="My song" comment="some comment" genre="first genre" genre+="new genre" ...
+#> ytdl http://youtube.com/some_video artist="My artist" song="My song" comment="some comment" genre="first genre" genre+="new genre" ...
+Downloading http://youtube.com/some_video ...
+Downloaded 'MyArtist - MyTrack.mp3'.
+Leaving downloaded track default's artist=MyArtist && track=MyTrack
+Moved mp3 to '/my/save/directory/MyArtist - MyTrack.mp3'
 ```
 
 ### Session mode
 
 With no default tags: 
 ```
-# ytdl session [OPTIONAL_OUTPUT_DIR]
-# http://youtube.com/first_video_without_tags
-# http://youtube.com/2nd_with_some_tags genre="Rock;Indie" comment="u flyin"
+#> ytdl session [OPTIONAL_OUTPUT_DIR]
+#> http://youtube.com/first_video_without_tags
+...
+#> http://youtube.com/2nd_with_some_tags genre="Rock;Indie" comment="u flyin"
+...
 ```
 When output dir is not specified, defaults to `$SAVE_DIRECTORY` (or its default value).
 
 With default tags :
 ```
-# ytdl session genre="Rock" comment="they are all great"
-# http://youtube.com/first_video genre+="Indie"
+#> ytdl session genre="Rock" comment="they are all great"
+#> http://youtube.com/first_video genre+="Indie"
+#> http://youtube.com/not_so_rocky genre="Pop" genre+="Electro"
 ```
 
 ### Tags edition
 
 ```
-# ytdl tags [OPTIONAL_MP3_GLOBBING]
-< /my/save/directory/Rap
-< 1) Jehst - Liquid diction.mp3          Artist='Jehst'          Track='Liquid diction'  Genres='Rap'    Comment=''
-< 2) Lighter Shade - Shaolin Angel.mp3   Artist='Lighter Shade'  Track='Shaolin Angel'   Genres='Rap'    Comment=''
-< Select music index ranges to edit, 'p' to print ID3 tags or 'e' to exit :
-# 1-2
-< Selected "/my/save/directory/Rap/Jehst - Liquid diction.mp3" "/my/save/directory/Rap/Lighter Shade - Shaolin Angel.mp3"
-# genre+="Oldschool"
-< Select music index ranges to edit, 'p' to print ID3 tags or 'e' to exit :
-# p
-< 1) Jehst - Liquid diction.mp3          Artist='Jehst'          Track='Liquid diction'  Genres='Rap;Oldschool'    Comment=''
-< 2) Lighter Shade - Shaolin Angel.mp3   Artist='Lighter Shade'  Track='Shaolin Angel'   Genres='Rap;Oldschool'    Comment=''
+#> ytdl tags [OPTIONAL_MP3_GLOBBING]
+/my/save/directory/Rap
+1) Jehst - Liquid diction.mp3          Artist='Jehst'          Track='Liquid diction'  Genres='Rap'    Comment=''
+2) Lighter Shade - Shaolin Angel.mp3   Artist='Lighter Shade'  Track='Shaolin Angel'   Genres='Rap'    Comment=''
+Select music index ranges to edit, 'p' to print ID3 tags or 'e' to exit :
+#> 1-2
+Selected "/my/save/directory/Rap/Jehst - Liquid diction.mp3" "/my/save/directory/Rap/Lighter Shade - Shaolin Angel.mp3"
+#> genre+="Oldschool"
+Select music index ranges to edit, 'p' to print ID3 tags or 'e' to exit :
+#> p
+1) Jehst - Liquid diction.mp3          Artist='Jehst'          Track='Liquid diction'  Genres='Rap;Oldschool'    Comment=''
+2) Lighter Shade - Shaolin Angel.mp3   Artist='Lighter Shade'  Track='Shaolin Angel'   Genres='Rap;Oldschool'    Comment=''
 ```
 When no globbing is provided, defaults to all mp3 files recursively found in `$SAVE_DIRECTORY` (or its default value).
 
