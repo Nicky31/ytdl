@@ -2,11 +2,21 @@
 shopt -s nocasematch # case insensitive comparisons
 shopt -s globstar # recursive ** globbin 
 SAVE_DIRECTORY=${SAVE_DIRECTORY:-"/home/martin/Medias/Music/tri"}
+LIST_FFTABS_SCRIPT=$HOME/bin/ytdl-cli/list-fftabs.py
+LAST_TAB_FILE=/tmp/ff_last_tab
+NOTIFY_SEND_WHEN_DMENU_TERM="dumb"
 
 function usage() {
     echo Single download usage : ytdl YOUTUBE_URL [ID3_OPTS] 
     echo Multi download usage : ytdl session [SAVE_DIRECTORY]
     echo ID3 tags editor usage : ytdl tags MP3_FILES    
+}
+
+function ytlog() {
+    echo "${@}"
+    if [[ $(command -v notify-send) ]] && [[ "$TERM" == "$NOTIFY_SEND_WHEN_DMENU_TERM" ]] ; then 
+        notify-send --urgency=low -t 4000 "ytdl-ff" "${@}"
+    fi    
 }
 
 if [[ -z $1 ]] ;
@@ -25,14 +35,14 @@ function download() {
     shift
     local meta
     local filename
-    
+
     echo "Downloading $url ..."
     # Download MP3 & retrieve output filename
     meta=$(youtube-dl -x --audio-format mp3 --audio-quality 320K --no-playlist \
         --add-metadata  -o "%(title)s.%(ext)s" --print-json $url)
     if [[ $? -ne 0 ]] ;
     then
-        echo "Skipping $url"
+        ytlog "youtube-dl could not download '$url'"
         return 1
     fi
     youtube_channel=$(echo "$meta" | jq -r .uploader)
@@ -71,7 +81,7 @@ function download() {
 
     # move to save directory
     moved_file="$SAVE_DIRECTORY/$filename"
-    echo "Moved mp3 to '$moved_file'"
+    ytlog "Saved '$moved_file'"
     mv "$filename" "$moved_file" 2> /dev/null
     # edit ID3 tags
     edit_id3tags "$moved_file" $parse_filename "$@"
@@ -248,7 +258,6 @@ function tags_editor() {
 
 ##################################################################
 ##### Main start
-
 if [[ $1 == "tags" ]] ; then
     shift
 
@@ -265,6 +274,36 @@ elif [[ $1 == "session" ]] ; then
     fi
     echo "Session mode. Will save every mp3 to '$SAVE_DIRECTORY'"
     session_mode "$@"
+elif [[ $1 == "ff-watch" ]] ; then
+    if [[ -f /tmp/ff_watch_daemon.pid ]] ; then
+        echo "ytdl ff-watch already running"
+        exit 0 
+    fi
+    echo "$$" > /tmp/ff_watch_daemon.pid
+    python $LIST_FFTABS_SCRIPT watch | while IFS= read -r line; do
+        if [[  $(echo "$line" | grep -E "youtube.[a-z]{1,5}/watch") ]] ; then
+            echo "$line" > "$LAST_TAB_FILE"
+        fi
+    done
+elif [[ $1 == "ff" ]] ; then
+    shift
+    if [[ -n $1 ]] ; then
+        tab_title=$1
+    elif [[ -f "$LAST_TAB_FILE" ]] ; then
+        tab_title=$(cat "$LAST_TAB_FILE" | jq -r .title)
+    else
+        ytlog "Firefox tab detection needs ytdl ff-watch to run in background"
+        exit 1
+    fi
+    tab=$(python $LIST_FFTABS_SCRIPT find "$tab_title" | head -n1)
+    if [[ -z "$tab" ]] ; then 
+        ytlog "Did not find any tab corresponding to '$tab_title'"
+        exit 1
+    fi
+    title=$(echo $tab | jq -r .title)
+    url=$(echo $tab | jq -r .url)
+    ytlog "Starting download '$title' ($url)"
+    download "$url"
 else # single download
     download "$@"
 fi

@@ -1,21 +1,47 @@
 # ytdl
-ytdl combines [youtube-dl](https://github.com/ytdl-org/youtube-dl) for youtube mp3 downloading and [mid3v2](https://github.com/quodlibet/mutagen/blob/master/docs/man/mid3v2.rst) for proper ID3v2 tagging.  
-On top of them, a few improvements have been done to enhance tags consistency & fasten their edition :
+ytdl combines [youtube-dl](https://github.com/ytdl-org/youtube-dl) for youtube mp3 downloading and [mid3v2](https://mutagen.readthedocs.io/en/latest/man/mid3v2.html) for proper ID3v2 tagging.    
+In addition, `ytdl ff` integrates [this script](https://gist.github.com/tmonjalo/33c4402b0d35f1233020bf427b5539fa) to detect and download opened youtube tabs with their title autocompletion.
+
+On top of them, a few improvements have been done :
+* 4 differents usage modes :
+    * **firefox mode** automatically downloads last opened Firefox Youtube tab or any youtube tab matching with given parameter. Can be used from rofi/dmenu equivalent with status messages sent through `notify-send`
+    * **single download mode** lets you download & edit tags at once
+    * **session mode** lets you provide default tags for multiple video URLs you feed in standard input, each of which can have their specifics tags 
+    * **tags edition mode** lets you view and edit tags of multiples files.
 * youtube-dl defaults settings to only download audio as 320K mp3. When given a playlist URL, only download the specified video instead of the whole playlist.
-* Clean-up of noisy patterns like "(Original Mix)" or "(Official Video)" in filename
+* Clean-up of noisy patterns like "(Original Mix)" or "(Official Video)" in filenames
 * When downloading from official youtube channels which do not indicate artist name in the video title, output file is renamed accordingly : *Artist - Track.mp3*.
 * When artist or track name is missing from downloaded ID3 tags and only in this case, attempt to extract them from filename. Exact same behaviour as youtube-dl `--metadata-from-title "%(artist)s - %(title)s"`, but applied only in the event of missing tags since that video titles are often more prone to errors than ID3 tags.
 * All mp3 files are saved to the `$SAVE_DIRECTORY` directory, whose default value is written at the beginning of the script.
-* 3 differents usage mode : **single download** mode lets you download & edit tags at once, **session** lets you provide default tags for the video URLs you feed in standard input, and **tags edition** lets you view and edit tags of multiples files.
 * `genre+=` concatenates new genres to those already existing, separated with a `;`
 
 ## Requirements
-* youtube-dl
+* [youtube-dl](https://github.com/ytdl-org/youtube-dl)
 * jq
-* mid3v2
+* [mid3v2](https://mutagen.readthedocs.io/en/latest/man/mid3v2.html)
 * bash 4+
 
+## Enable firefox mode
+* First install `python3` and `lz4` python package.
+* At the beginning of `ytdl.sh`, make sure `$LST_FFTABS_SCRIPTS` points to `list-fftabs.py`
+* To enable Firefox tab autocompletion, add `source PATH_TO/ff_tabs_autocomplete.sh` to your .bashrc or .zshrc
+    * For zshrc to work with bash autocompletion, you need to add this line before sourcing : `autoload bashcompinit && bashcompinit`
+    * oh-my-zsh also needs `wp-cli` plugin
+* To lets `ytdl ff` download last opened youtube tab without specifying its name, run `ytdl ff-watch` in background (i.e at the end of your bashrc)
+
 ## Usage
+
+### Firefox mode
+
+Download last opened tab :
+```
+ytdl ff
+```
+
+Download any tab matching with "boiler room" : 
+```
+ytdl ff boiler room
+```
 
 ### Single download mode
 
