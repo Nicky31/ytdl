@@ -5,8 +5,10 @@ SAVE_DIRECTORY=${SAVE_DIRECTORY:-"/home/martin/Medias/Music/tri"}
 LIST_FFTABS_SCRIPT=$HOME/bin/ytdl-cli/list-fftabs.py
 LAST_TAB_FILE=/tmp/ff_last_tab
 NOTIFY_SEND_WHEN_DMENU_TERM="dumb"
+YOUTUBE_REGEX="youtube.[a-z]{1,5}/watch"
 
 function usage() {
+    echo Firefox tab usage : ytdl ff [SEARCH_TITLE] [ID3_OPTS]
     echo Single download usage : ytdl YOUTUBE_URL [ID3_OPTS] 
     echo Multi download usage : ytdl session [SAVE_DIRECTORY]
     echo ID3 tags editor usage : ytdl tags MP3_FILES    
@@ -281,21 +283,24 @@ elif [[ $1 == "ff-watch" ]] ; then
     fi
     echo "$$" > /tmp/ff_watch_daemon.pid
     python $LIST_FFTABS_SCRIPT watch | while IFS= read -r line; do
-        if [[  $(echo "$line" | grep -E "youtube.[a-z]{1,5}/watch") ]] ; then
+        if [[  $(echo "$line" | grep -E "$YOUTUBE_REGEX") ]] ; then
             echo "$line" > "$LAST_TAB_FILE"
         fi
     done
 elif [[ $1 == "ff" ]] ; then
     shift
-    if [[ -n $1 ]] ; then
-        tab_title=$1
-    elif [[ -f "$LAST_TAB_FILE" ]] ; then
+    # If we are given a title pattern to search that is not an ID3 option
+    if [[ -n $1 ]] && [[ ! $(echo "$1" | grep -E "^(genre\+?|artist|song|comment)=") ]] ; then
+        tab_title="$1"
+        shift
+    # No search pattern, but we have last tab stored
+    elif [[ -z "$tab_title" ]] && [[ -f "$LAST_TAB_FILE" ]] ; then
         tab_title=$(cat "$LAST_TAB_FILE" | jq -r .title)
-    else
+    else # No search pattern neither ff-watch enabled !
         ytlog "Firefox tab detection needs ytdl ff-watch to run in background"
         exit 1
     fi
-    tab=$(python $LIST_FFTABS_SCRIPT find "$tab_title" | head -n1)
+    tab=$(python $LIST_FFTABS_SCRIPT find "$tab_title" | grep -E "$YOUTUBE_REGEX" | head -n1)
     if [[ -z "$tab" ]] ; then 
         ytlog "Did not find any tab corresponding to '$tab_title'"
         exit 1
@@ -303,7 +308,7 @@ elif [[ $1 == "ff" ]] ; then
     title=$(echo $tab | jq -r .title)
     url=$(echo $tab | jq -r .url)
     ytlog "Starting download '$title' ($url)"
-    download "$url"
+    download "$url" "${@}"
 else # single download
     download "$@"
 fi
