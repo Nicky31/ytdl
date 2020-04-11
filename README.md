@@ -8,11 +8,13 @@ On top of them, a few improvements have been done :
     * **single download mode** lets you download & edit tags at once
     * **session mode** lets you provide default tags for multiple video URLs you feed in standard input, each of which can have their specifics tags 
     * **tags edition mode** lets you view and edit tags of multiples files.
+* All mp3 files are saved to the `$SAVE_DIRECTORY` directory, whose default value is written at the beginning of the script.
+* `level_dirs` and `genre_dirs` script variables allow custom subdirectories to be automatically appended depending on energy level / genre.
+* Each download is logged to a log file inside `$YTDL_HISTORY_DIR/` directory.
 * youtube-dl defaults settings to only download audio as 320K mp3. When given a playlist URL, only download the specified video instead of the whole playlist.
 * Clean-up of noisy patterns like "(Original Mix)" or "(Official Video)" in filenames
 * When downloading from official youtube channels which do not indicate artist name in the video title, output file is renamed accordingly : *Artist - Track.mp3*.
 * When artist or track name is missing from downloaded ID3 tags and only in this case, attempt to extract them from filename. Exact same behaviour as youtube-dl `--metadata-from-title "%(artist)s - %(title)s"`, but applied only in the event of missing tags since that video titles are often more prone to errors than ID3 tags.
-* All mp3 files are saved to the `$SAVE_DIRECTORY` directory, whose default value is written at the beginning of the script.
 * `genre+=` concatenates new genres to those already existing, separated with a `;`
 
 ## Requirements

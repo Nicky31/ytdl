@@ -6,6 +6,7 @@ LIST_FFTABS_SCRIPT=$HOME/bin/ytdl-cli/list-fftabs.py
 LAST_TAB_FILE=/tmp/ff_last_tab
 NOTIFY_SEND_WHEN_DMENU_TERM="dumb"
 YOUTUBE_REGEX="youtube.[a-z]{1,5}/watch"
+YTDL_HISTORY_DIR=${YTDL_HISTORY_DIR:-"/home/martin/Medias/Music/tri/logs"}
 
 function usage() {
     echo Firefox tab usage : ytdl ff [SEARCH_TITLE] [ID3_OPTS]
@@ -27,6 +28,50 @@ then
     usage
     exit 1
 fi
+
+
+# @brief: Given filename + ID3 tag options, return output directory
+# @arg1:  filename
+# @args:  genres options
+declare -A level_dirs=(
+    ["lvl=1"]="1 - Relaxing"
+    ["lvl=2"]="2 - CalmBackground"
+    ["lvl=3"]="3 - RythmicBackground"
+    ["lvl=4"]="4 - Dancing"
+    ["lvl=5"]="5 - Tawa"
+)
+declare -A genre_dirs=(
+    ["Techno"]="Techno"
+    ["Techno Mélodique"]="Melodic Techno"
+    ["Oldschool House"]="Oldschool House"
+)
+function print_out_dir() {
+    local filename=$1
+    shift
+    local out_dir="$SAVE_DIRECTORY"
+
+    # energy subdirectory
+    local level_tag=$(printf "%s\n" "${@}" | grep "lvl=[0-9]")
+    if [[ -n "$level_tag" ]] ; then 
+        local level_dir="${level_dirs[$level_tag]}"
+        if [[ -n "$level_dir" ]] && [[ -d "$out_dir/$level_dir" ]] ; then
+            out_dir="$out_dir/$level_dir"            
+        fi
+    fi
+
+    # genre subdirectory:  take the more specific (=longest) genre as directory
+    local genre_dir="."
+    for genre in "${!genre_dirs[@]}" ; do
+        local cur_dir="${genre_dirs[$genre]}"
+        if [[ "${*}" == *"$genre"* ]] && [[ -d "$out_dir/$cur_dir" ]]; then
+            if [[ -z "$genre_dir" ]] || [[ ${#cur_dir} -gt ${#genre_dir} ]] ; then
+                genre_dir="$cur_dir"
+            fi
+        fi
+    done
+
+    echo "$out_dir/$genre_dir/$filename"
+}
 
 # @brief: Download youtube MP3
 # When artist or track is missing from downloaded ID3 tags, they are automatically retrieved from filename
@@ -82,9 +127,15 @@ function download() {
     fi
 
     # move to save directory
-    moved_file="$SAVE_DIRECTORY/$filename"
+    moved_file=$(print_out_dir "$filename" "${@}" )
     ytlog "Saved '$moved_file'"
     mv "$filename" "$moved_file" 2> /dev/null
+
+    # Logs
+    if [[ -d "$YTDL_HISTORY_DIR" ]] ; then
+        echo "$(date -Im) $moved_file" >> "$YTDL_HISTORY_DIR/$(date -I).txt"
+    fi
+
     # edit ID3 tags
     edit_id3tags "$moved_file" $parse_filename "$@"
 }
@@ -106,7 +157,9 @@ function edit_id3tags() {
     local set_genres=""
     local add_genres=()
     for arg; do 
-        if [[ $arg == "parse-filename" ]] ; then 
+        if [[ $arg == "lvl="* ]] ; then
+            continue # Only used for print_out_dir
+        elif [[ $arg == "parse-filename" ]] ; then 
             parse_filename=true
         elif [[ $arg == "genre+="* ]] ; then
             IFS=";" read -r -a new_genres <<< "${arg:7}"
