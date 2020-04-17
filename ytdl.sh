@@ -97,8 +97,8 @@ function download() {
     filename=${filename/webm/mp3}
 
     # Filter out noisy words
-    local renamed=${filename/\(*\)} # remove everything between ()
-    renamed=${renamed/\[*\]} # remove everything between []
+    local renamed=${filename/\(Official Video\)}
+    renamed=${renamed/\(Original mix\)}
     renamed=${renamed/.mp3} # remove extension in order to clean trailing whitespaces
     renamed=$(echo "$renamed" | sed -e 's/[[:space:]]*$//') # remove trailing whitespacess
     renamed=$renamed.mp3 # Add .mp3 extension
@@ -343,23 +343,25 @@ elif [[ $1 == "ff-watch" ]] ; then
 elif [[ $1 == "ff" ]] ; then
     shift
     # If we are given a title pattern to search that is not an ID3 option
-    if [[ -n $1 ]] && [[ ! $(echo "$1" | grep -E "^(genre\+?|artist|song|comment)=") ]] ; then
+    if [[ -n $1 ]] && [[ ! $(echo "$1" | grep -E "^(genre\+?|artist|song|comment|lvl)=") ]] ; then
         tab_title="$1"
         shift
+        tab=$(python $LIST_FFTABS_SCRIPT find "$tab_title" | grep -E "$YOUTUBE_REGEX" | head -n1)
+        if [[ -z "$tab" ]] ; then 
+            ytlog "Did not find any tab corresponding to '$tab_title'"
+            exit 1
+        fi
+        title=$(echo $tab | jq -r .title)
+        url=$(echo $tab | jq -r .url)        
     # No search pattern, but we have last tab stored
     elif [[ -z "$tab_title" ]] && [[ -f "$LAST_TAB_FILE" ]] ; then
-        tab_title=$(cat "$LAST_TAB_FILE" | jq -r .title)
+        title=$(cat "$LAST_TAB_FILE" | jq -r .title)
+        url=$(cat "$LAST_TAB_FILE" | jq -r .url)
     else # No search pattern neither ff-watch enabled !
         ytlog "Firefox tab detection needs ytdl ff-watch to run in background"
         exit 1
     fi
-    tab=$(python $LIST_FFTABS_SCRIPT find "$tab_title" | grep -E "$YOUTUBE_REGEX" | head -n1)
-    if [[ -z "$tab" ]] ; then 
-        ytlog "Did not find any tab corresponding to '$tab_title'"
-        exit 1
-    fi
-    title=$(echo $tab | jq -r .title)
-    url=$(echo $tab | jq -r .url)
+
     ytlog "Starting download '$title' ($url)"
     download "$url" "${@}"
 else # single download
